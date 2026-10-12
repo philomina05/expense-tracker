@@ -1,8 +1,8 @@
-
 import express from "express";
 import cors from "cors";
 import Database from "better-sqlite3";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import { realpathSync } from "node:fs";
 
 
 export function createApp(databasePath = process.env.DB_PATH || "expenses.db") {
@@ -103,7 +103,8 @@ export function createApp(databasePath = process.env.DB_PATH || "expenses.db") {
 
 const isMainModule =
   process.argv[1] &&
-  import.meta.url === pathToFileURL(process.argv[1]).href;
+  realpathSync(process.argv[1]) ===
+    realpathSync(fileURLToPath(import.meta.url));
 
 
 if (isMainModule) {

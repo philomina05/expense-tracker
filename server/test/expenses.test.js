@@ -1,4 +1,3 @@
-
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, rm } from "node:fs/promises";
@@ -52,7 +51,7 @@ test("expenses endpoint initially returns an empty list", async () => {
   assert.deepEqual(await response.json(), []);
 });
 
-test("creating an expense trims its description", async () => {
+test("creating an expense trims its description and saves it", async () => {
   const response = await fetch(`${baseUrl}/api/expenses`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -70,6 +69,22 @@ test("creating an expense trims its description", async () => {
   assert.equal(expense.amount, 150);
   assert.equal(expense.category, "Food");
   assert.ok(expense.id);
+
+  const listResponse = await fetch(`${baseUrl}/api/expenses`);
+  assert.equal(listResponse.status, 200);
+
+  const expenses = await listResponse.json();
+
+  assert.ok(
+    expenses.some(
+      (item) =>
+        item.id === expense.id &&
+        item.description === "Lunch" &&
+        item.amount === 150 &&
+        item.category === "Food"
+    ),
+    "Created expense should appear in the expense list"
+  );
 });
 
 test("rejecting an empty description", async () => {
@@ -143,4 +158,37 @@ test("returning 404 for a missing expense", async () => {
   assert.deepEqual(await response.json(), {
     error: "Expense not found.",
   });
+});
+
+test("deleting an existing expense removes it", async () => {
+  const createResponse = await fetch(`${baseUrl}/api/expenses`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      description: "Expense to delete",
+      amount: 50,
+      category: "Food",
+    }),
+  });
+
+  assert.equal(createResponse.status, 201);
+  const expense = await createResponse.json();
+
+  const deleteResponse = await fetch(
+    `${baseUrl}/api/expenses/${expense.id}`,
+    { method: "DELETE" }
+  );
+
+  assert.equal(deleteResponse.status, 204);
+
+  const listResponse = await fetch(`${baseUrl}/api/expenses`);
+  assert.equal(listResponse.status, 200);
+
+  const expenses = await listResponse.json();
+
+  assert.equal(
+    expenses.some((item) => item.id === expense.id),
+    false,
+    "Deleted expense should no longer appear in the list"
+  );
 });
