@@ -37,9 +37,13 @@ function App() {
 
       const data = await response.json();
       setExpenses(data);
-    } catch (err) {
-      setError(err.message || "Could not load expenses. Please try again.");
-    } finally {
+    
+} catch (err) {
+  setError(
+    "Could not load expenses. Please check that the backend server is running and try again."
+  );
+} finally {
+
       setLoading(false);
     }
   }
@@ -103,11 +107,21 @@ function App() {
         }),
       });
 
-      const data = await response.json();
+     
+let data = {};
 
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to add expense.");
-      }
+try {
+  data = await response.json();
+} catch {
+  if (response.ok) {
+    throw new Error("The server returned an invalid response.");
+  }
+}
+
+if (!response.ok) {
+  throw new Error(data.error || "Failed to add expense.");
+}
+
 
       setExpenses((currentExpenses) => [data, ...currentExpenses]);
       setDescription("");
