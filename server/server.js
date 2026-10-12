@@ -45,10 +45,10 @@ app.post("/api/expenses", (req, res) => {
 
   if (
     typeof description !== "string" ||
-    !description.trim()
+    !description.trim() || description.trim().length > 100
   ) {
     return res.status(400).json({
-      error: "Description is required.",
+      error: "Description must be between 1 and 100 characters.",
     });
   }
 
