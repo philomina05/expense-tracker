@@ -38,9 +38,12 @@ function App() {
       const data = await response.json();
       setExpenses(data);
     
+
 } catch (err) {
   setError(
-    "Could not load expenses. Please check that the backend server is running and try again."
+    err instanceof TypeError
+      ? "Could not reach the server. Please check that the backend is running and try again."
+      : "Could not load expenses. Please try again."
   );
 } finally {
 
